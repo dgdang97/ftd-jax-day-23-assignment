@@ -54,9 +54,14 @@ public class UserService {
 
 	public String login(User user) {
 		User check = ur.findByUsername(user.getUsername());
+		Location recordLogin;
 		if (check != null) {
 			if (user.getPassword().equals(user.getPassword())) {
-				Location recordLogin = lr.findByLocationName(check.getLocation());
+				if (user.getLocation() == null) {
+					recordLogin = lr.findByLocationName(check.getLocation());
+				} else {
+					recordLogin = lr.findByLocationName(user.getLocation());
+				}
 				recordLogin.setLocationViews(recordLogin.getLocationViews() - 1);
 				return "login Successful! Welcome back!";
 			}
