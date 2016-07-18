@@ -24,46 +24,64 @@ public class UserService {
 	@Autowired
 	UserRepository ur;
 
+	private Boolean verifyUser(User user) {
+		if (user.getUsername() != null) {
+			if (user.getPassword() != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public String newLocation(Location location) {
-		Location check = lr.findByLocationName(location.getLocationName());
-		if (check == null) {
-			location.setLocationViews((long) 0);
-			location.setLocationConversions((long) 0);
-			lr.save(location);
-			return "New location created!";
+		if (location.getLocationName() != null) {
+			Location check = lr.findByLocationName(location.getLocationName());
+			if (check == null) {
+				location.setLocationViews((long) 0);
+				location.setLocationConversions((long) 0);
+				lr.save(location);
+				return "New location created!";
+			} else {
+				return "Location already registered!";
+			}
 		} else {
-			return "Location already registered!";
+			return "The location name is missing! Please put a location name before trying again!";
 		}
 	}
 
 	public String newUser(User user) {
-		User check = ur.findByUsername(user.getUsername());
-		if (check == null) {
-			Location recordRegistration = lr.findByLocationName(user.getLocation());
-			if (recordRegistration != null) {
-				recordRegistration.setLocationConversions(recordRegistration.getLocationConversions() + 1);
-				ur.save(user);
-				return "User " + user.getUsername() + " registered!";
+		if (verifyUser(user)) {
+			User check = ur.findByUsername(user.getUsername());
+			if (check == null) {
+				Location recordRegistration = lr.findByLocationName(user.getLocation());
+				if (recordRegistration != null) {
+					recordRegistration.setLocationConversions(recordRegistration.getLocationConversions() + 1);
+					ur.save(user);
+					return "User " + user.getUsername() + " registered!";
+				} else {
+					return "Registration failed. Location missing from input or database.";
+				}
 			} else {
-				return "Registration failed. Location missing from input or database.";
+				return "User " + user.getUsername() + " already registered!";
 			}
-		} else {
-			return "User " + user.getUsername() + " already registered!";
 		}
+		return "Registration failed. Please review provided information before attempting again";
 	}
 
 	public String login(User user) {
-		User check = ur.findByUsername(user.getUsername());
-		Location recordLogin;
-		if (check != null) {
-			if (user.getPassword().equals(user.getPassword())) {
-				if (user.getLocation() == null) {
-					recordLogin = lr.findByLocationName(check.getLocation());
-				} else {
-					recordLogin = lr.findByLocationName(user.getLocation());
+		if (verifyUser(user)) {
+			User check = ur.findByUsername(user.getUsername());
+			Location recordLogin;
+			if (check != null) {
+				if (user.getPassword().equals(user.getPassword())) {
+					if (user.getLocation() == null) {
+						recordLogin = lr.findByLocationName(check.getLocation());
+					} else {
+						recordLogin = lr.findByLocationName(user.getLocation());
+					}
+					recordLogin.setLocationViews(recordLogin.getLocationViews() - 1);
+					return "login Successful! Welcome back!";
 				}
-				recordLogin.setLocationViews(recordLogin.getLocationViews() - 1);
-				return "login Successful! Welcome back!";
 			}
 		}
 		return "login failed!";
